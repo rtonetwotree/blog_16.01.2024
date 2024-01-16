@@ -1,0 +1,64 @@
+# Blog Intro 
+    
+    We're back! It's that time of the phase again! What time is that, you may ask? Well, blogging time, of course! To satisfy this blogging requirement, I'll review some of the interesting 
+things my classmates and I have learned and worked on in the month since my previous blogging assignment was submitted.
+
+# Phase II Project Recap
+    My cohort is currently deep in the midst of Phase III of our Flatiron School Data Science Bootcamp, in which we are being introduced to Object Oriented Programming and Machine Learning. 
+Cool stuff! In Phase II, we did a quick but important introduction to SQL, followed by a fairly in-depth introduction to the statistical concepts and methods which will form the basis of our
+understanding once we move on to more advanced topics (e.g. Phase III Machine Learning). 
+
+    The Phase II group project was centered around datasets pertaining to the movie industry. This project utilizd python for exploratory data analysis and python along with SQL for interacting 
+with the data in the databases. These publicly available databases and datasets are hosted on IMDB.com, Box Office Mojo, The Movie Database, The Numbers, and Rotten Tomatoes. These data sets 
+and databases contain wide-ranging information on movie finances, audience review scores, production details including relevant directors and actors, and more. By combining data from different 
+sources we were able to extract information on which movie attributes tended to be the most highly correlated with a film's financial success or failure. For instance, we found that genres such
+as Family, Horror, Thriller, and Crime tended to have higher proportional returns (measured as Revenue/Budget) compared to the industry average. This is most likely due to the nature of production
+for these films being low-cost, combined with a high revenue ceiling. We also were able to find a seasonal trend in movie profitability wherein the industry overall experiences two annual revenue
+peaks - the November - December holiday peak period and the May - June - July summer break period. Our analysis dives further into the data but right now i'd like to stop and look at an interesting
+piece of code that my teamate though up while we were in the Exploratory Data Analysis part of our project. For some backstory, the problem this code sucessfully solves is more simply solved using
+the .explode() method. Our lecturer and fearless leader Praveen eventually shared this .explode() method with the class, but when we were working on this part of the project we didn't know about
+.explode() yet. Basically, .explode() method returns an array of strings, each of which is a substring of string formed by splitting it on boundaries formed by the string separator. But before
+we knew this method, my teammate Nechama found a way to .explode() our movie genres colums using a Recursive Split in Pandas! And I thought this was really cool and clever! Here's the code below:
+
+# get top directors
+directors = pd.read_sql("""
+
+WITH RECURSIVE split(genre, str) AS (
+    SELECT '', genres || ',' FROM movie_basics
+    UNION ALL SELECT
+    substr(str, 0, instr(str, ',')),
+    substr(str, instr(str, ',')+1)
+    FROM split WHERE str!=''
+)
+SELECT DISTINCT 
+                p.primary_name AS director,
+                AVG(CAST(REPLACE(REPLACE(t.worldwide_gross, '$', ''), ',', '') AS INT)) / 
+                                AVG(CAST(REPLACE(REPLACE(t.production_budget, '$', ''), ',', '') AS INT)) AS average_profit_perc
+FROM split
+JOIN movie_basics AS m
+    ON instr(genres, genre) > 0
+    
+JOIN directors AS d
+    ON m.movie_id = d.movie_id
+JOIN persons AS p
+    ON d.person_id = p.person_id
+JOIN tn_movie_budgets AS t
+    ON t.movie = m.primary_title
+    
+WHERE genre!='' AND genre = "Family"
+GROUP BY director
+ORDER BY average_profit_perc DESC
+LIMIT 10    
+
+""", conn)
+directors
+
+    This is the whole block of code we used to find Directors whose work is most highlt correlated with a fil'ms financial success, but I am mainly talking about the top part,
+the Recursive split. It's one of those things that made sense when I saw it, but I don't know if I would've ever thought about it on my own. It's code that splits a string
+wherever there are commas. And I think this highlights one of the coolest things about the environment at Flatiron School: the collaborative element which exposes me to the diverse and 
+interesting ideas and thought processes of other smart creative coding students. I look forward to more collaoration and more interesting insights gleaned through the eyes of my classmates
+in the coming days of this bootcamp.
+
+# Thanks for Reading
+
+    Thanks for taking the time to read my blog! Until next time, happy coding!
